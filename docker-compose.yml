@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Laravel Backend
+  backend:
+    build:
+      context: ./back_end  # Path to your Laravel backend code
+    container_name: backend
+    working_dir: /var/www
+    volumes:
+      - ./back_end:/var/www
+    ports:
+      - "8000:8000"  # Exposes Laravel app on port 8000
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: back_end
+      DB_USERNAME: root
+      DB_PASSWORD:
+    networks:
+      - app-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./front_end  # Path to your React frontend code
+    container_name: frontend
+    ports:
+      - "3000:3000"  # Exposes React app on port 3000
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    ports:
+      - "3306:3306"  # Exposes MySQL on port 3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: back_end
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - app-network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - "8081:80"  # Exposes phpMyAdmin on port 8081
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+volumes:
+  dbdata:
+
+networks:
+  app-network:
